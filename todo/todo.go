@@ -3,8 +3,11 @@ package todo
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"time"
+
+	"github.com/alexeyco/simpletable"
 )
 
 type item struct {
@@ -46,6 +49,34 @@ func (t *Todos) Delete(index int) error {
 	}
 	*t = append(list[:index-1], list[index:]...)
 	return nil
+}
+
+func (t *Todos) List() {
+
+	table := simpletable.New()
+	table.Header = &simpletable.Header{
+		Cells: []*simpletable.Cell{
+			{Align: simpletable.AlignCenter, Text: "#"},
+			{Align: simpletable.AlignCenter, Text: "Task"},
+			{Align: simpletable.AlignCenter, Text: "Done?"},
+			{Align: simpletable.AlignRight, Text: "CreatedAt"},
+			{Align: simpletable.AlignRight, Text: "CompletedAt"},
+		},
+	}
+	var cells [][]*simpletable.Cell
+	for i, item := range *t {
+		cells = append(cells, *&[]*simpletable.Cell{
+			{Text: fmt.Sprintf("%d", i)},
+			{Text: item.Task},
+			{Text: fmt.Sprintf("%t", item.Done)},
+			{Text: item.CreatedAt.Format(time.RFC822)},
+			{Text: item.CompletedAt.Format(time.RFC822)},
+		})
+	}
+
+	table.Body = &simpletable.Body{Cells: cells}
+	table.SetStyle(simpletable.StyleUnicode)
+	table.Print()
 }
 
 func (t *Todos) Load(filename string) error {
